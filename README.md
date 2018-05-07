@@ -3,9 +3,11 @@
 NodeMCU V3 Remote Control Station
 =================================
 
-This project is developed for a test stand (see schematic) explore some of the features of ESP8266-12E WiFi module. Hopefully you will be able to modify the code and adapt it to your own needs.
+This project is developed for a test stand (see schematic) and explore some of the features of ESP8266-12E WiFi module. Hopefully you will be able to modify the code and adapt it to your own needs.
 
 Communication is based on the Websock protocol. To connect from the outside world, you need to forward ports 80 and 81 in your router.
+
+With this setup you can send two commands on separate digital outputs, get back-indication on two separate digital inputs, read an analog measurand and control a servo motor. The motor can be controlled to both ends and midpoint position via buttons, and also in proportional movement via a slider. At the moment there is no feedback to the slider symbol if you use the the buttons to control the motor. This is a work in progress.
 
 Required software
 -----------------
@@ -36,3 +38,7 @@ Download Adafruit common sensor library from https://github.com/adafruit/Adafrui
 
 Download Adafruit BME280 sensor library from https://github.com/adafruit/Adafruit_BME280_Library . Extract the .zip file and move it to the Arduino library folder. 
 Note: The file Adafruit_BME280.h contains the sensor I2C address on line 32. To be able to read date from the sensor, you may have to change the address from 0x77 to 0x76.
+
+Connect to the webpage
+----------------------
+When the board starts, the ip address of the board is reported in the serial monitor. Type this address into the address field of your browser. From the outside world you need to type your public ip address. This requires that you have performed the port forwarding mentioned above.
