@@ -3,15 +3,15 @@
 NodeMCU V3 Remote Control Station
 =================================
 
-This project is developed for a test stand (see schematic) and explore some of the features of ESP8266-12E WiFi module. Hopefully you will be able to modify the code and adapt it to your own needs.
+This project is developed for a test stand (see schematic) to explore some of the features of ESP8266-12E WiFi module. Hopefully you will be able to modify the code and adapt it to your own needs.
 
 Communication is based on the Websocket protocol. To connect from the outside world, you need to forward ports 80 and 81 in your router.
 
-With this setup you can send two commands on separate digital outputs, get back-indication on two separate digital inputs, read an analog measurand, and control a servo motor. The motor can be controlled to both ends and midpoint position via buttons, and also in proportional movement via a slider. At the moment there is no feedback to the slider symbol if you use the the buttons to control the motor. This is a work in progress.
+With this setup you can send two commands on separate digital outputs, get back-indication on two separate digital inputs, read an analog measurand, and control a servo motor. The motor can be controlled to both end positions and midpoint with buttons, and also in proportional movement with a slider. At the moment there is no feedback to update the slider position if you use the the buttons to control the motor. This is a work in progress.
 
 Required software
 -----------------
-The file WebSocketServer_RemoteStation.ino plus the necessary driver and Arduino libraries (see below).
+The sketch "WebSocketServer_RemoteStation.ino", plus the necessary driver and Arduino libraries (see below).
 
 Get started (Windows 10)
 ------------------------
@@ -39,4 +39,6 @@ Note: The file Adafruit_BME280.h contains the sensor I2C address on line 32. To 
 
 Connect to the webpage
 ----------------------
-When the board starts, the ip address of the board is reported on the serial monitor. Type this address into the address field of your browser. From the outside world you need to type your public ip address. This requires that you have performed the port forwarding mentioned above.
+You need to update the Arduino sketch with the ssid and WiFi password for your own local network. You will find these on line 63 and 64.
+
+When the board starts, the ip address of the board is reported on the serial monitor. Type this address into the address field of your browser on a PC or mobile phone. From the outside world you need to type your public ip address. This requires that you have performed the port forwarding mentioned above.
