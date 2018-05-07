@@ -19,7 +19,7 @@ Install the latest Arduino for Windows from here: https://www.arduino.cc/en/Main
 
 Configuration of the Arduino application:
 -----------------------------------------
-In File->Preferences->Settings, enter this additional Boards Manager URL: http://arduino.esp8266.com/stable/package_esp8266com_index.json .
+In File->Preferences->Settings, enter this additional Boards Manager URL: '''http://arduino.esp8266.com/stable/package_esp8266com_index.json''' .
 
 In the Boards manager, find and install library "esp8266 by ESP8266 Community".
 
