@@ -19,24 +19,22 @@ Install the latest Arduino for Windows https://www.arduino.cc/en/Main/Software
 
 Configuration of the Arduino application:
 -----------------------------------------
-In File->Preferences->Settings, enter this additional Boards Manager URL:
-http://arduino.esp8266.com/stable/package_esp8266com_index.json
+In File->Preferences->Settings, enter this additional Boards Manager URL: http://arduino.esp8266.com/stable/package_esp8266com_index.json .
 
 In the Boards manager, find and install library "esp8266 by ESP8266 Community".
 
-In Tools->Boards, choose "NodeMCU 1.0 (ESP8266-12E Module)". Choose the following options for the board: 
-CPU Frequency: "80 MHz", Flash Size: "4M (3M SPIFFS)", Upload Speed: "115200" .
+In Tools->Boards, choose "NodeMCU 1.0 (ESP8266-12E Module)". Choose the following options for the board: CPU Frequency: "80 MHz", Flash Size: "4M (3M SPIFFS)", Upload Speed: "115200" .
 
 Connect NodeMCU V3 to the computer.
 -----------------------------------
-Download COM/Serial port file CH341SER_WINDOWS.zip from https://github.com/nodemcu/nodemcu-devkit/tree/master/Drivers . 
-Extract and install the driver. Note this is for the CH340 serial chip. Check the board you purchased. Your board may have the CP2102 chip, which needs another driver (not covered here). You should be able to find that driver online, and continue with this project.
+Download COM/Serial port file CH341SER_WINDOWS.zip from https://github.com/nodemcu/nodemcu-devkit/tree/master/Drivers . Choose "Download ZIP", extract and install the driver. Note this is for the CH340 serial chip. Check the board you purchased. Your board may have the CP2102 chip, which needs another driver (not covered here). You should be able to find that driver online, and continue with this project.
 
-Download arduinoWebSockets library from https://github.com/Links2004/arduinoWebSockets . Extract the .zip file and move it to the Arduino library folder.
+Download arduinoWebSockets library from https://github.com/Links2004/arduinoWebSockets . Choose "Download ZIP", extract the .zip file and move it to the Arduino library folder.
 
-Download Adafruit common sensor library from https://github.com/adafruit/Adafruit_Sensor . Extract the .zip file and move it to the Arduino library folder.
+Download Adafruit common sensor library from https://github.com/adafruit/Adafruit_Sensor . Choose "Download ZIP", extract the .zip file and move it to the Arduino library folder.
 
-Download Adafruit BME280 sensor library from https://github.com/adafruit/Adafruit_BME280_Library . Extract the .zip file and move it to the Arduino library folder. 
+Download Adafruit BME280 sensor library from https://github.com/adafruit/Adafruit_BME280_Library . Choose "Download ZIP", extract the .zip file and move it to the Arduino library folder. 
+
 Note: The file Adafruit_BME280.h contains the sensor I2C address on line 32. To be able to read data from the sensor, you may have to change the address from 0x77 to 0x76.
 
 Connect to the webpage
