@@ -15,7 +15,7 @@ The file WebSocketServer_RemoteStation.ino plus the necessary driver and Arduino
 
 Get started (Windows 10)
 ------------------------
-Install the latest Arduino for Windows https://www.arduino.cc/en/Main/Software
+Install the latest Arduino for Windows from here: https://www.arduino.cc/en/Main/Software
 
 Configuration of the Arduino application:
 -----------------------------------------
