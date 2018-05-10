@@ -60,8 +60,8 @@ WebSocketsServer webSocket = WebSocketsServer(81);
 Adafruit_BME280 bme;
 Servo myServo;
 
-static const char ssid[] = "Your_ssid";
-static const char password[] = "Your_password";
+static const char ssid[] = "Your_WiFi_ssid";
+static const char password[] = "Your_WiFi_password";
 
 // Define GPIOs
 const int LEDPIN0 = 12; // D6 on LoLin NodeMCU v3
