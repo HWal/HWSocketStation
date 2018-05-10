@@ -60,8 +60,8 @@ WebSocketsServer webSocket = WebSocketsServer(81);
 Adafruit_BME280 bme;
 Servo myServo;
 
-static const char ssid[] = "Your_home_ssid";
-static const char password[] = "Your_WiFi_password";
+static const char ssid[] = "Your_ssid";
+static const char password[] = "Your_password";
 
 // Define GPIOs
 const int LEDPIN0 = 12; // D6 on LoLin NodeMCU v3
@@ -87,7 +87,7 @@ float voltage = 0;         // Calculated voltage based on max value 3.3V
 long currMillis = 0;       // Milliseconds since ESP8266 started
 long oldMillis = 0;        // Container for millisecond value at last poll
 int counter = 0;           // To sequence polling of inputs in the loop()
-long millisInterval = 600; // Duration between pollings
+long millisInterval = 300; // Duration between pollings
 float temperature = 0;
 float pressure = 0;
 // float altitude = 0;     // Not used
@@ -148,53 +148,65 @@ function start() {
     var g = evt.data;
     var h;
     if (g.substring(0, 3) === '00#') {
-      h = g.substring(3)
+      h = g.substring(3);
       document.getElementById('volts').innerHTML = h;
     }
     var i;
     if (g.substring(0, 3) === '01#') {
-      i = g.substring(3)
+      i = g.substring(3);
       document.getElementById('temp').innerHTML = i;
     }
     var j;
     if (g.substring(0, 3) === '02#') {
-      j = g.substring(3)
+      j = g.substring(3);
       document.getElementById('press').innerHTML = j;
     }
     var k;
     if (g.substring(0, 3) === '03#') {
-      k = g.substring(3)
+      k = g.substring(3);
       document.getElementById('hum').innerHTML = k;
+    }
+    var p;
+    if (g.substring(0, 3) === '06#') {
+      p = '0';
+      document.getElementById('progBar').value = p;
+    }
+    var q;
+    if (g.substring(0, 3) === '07#') {
+      q = '600';
+      document.getElementById('progBar').value = q;
+    }
+    var r;
+    if (g.substring(0, 3) === '08#') {
+      r = '1200';
+      document.getElementById('progBar').value = r;
     }
   };
 }
+
 // The following functions are called from the client html page
 // LED On - Off buttons
 function commandButtonclick(clickVal) {
   websock.send(clickVal.id);
 }
-// Direct positioning of servo motor 
+// Position servo motor
+// Left
 function servoButtonClickL() {
   var lNum = '06#';
   //console.log('lNum: ' + lNum);
   websock.send(lNum);
 }
+// Center
 function servoButtonClickC() {
   var cNum = '07#';
   //console.log('cNum: ' + cNum);
   websock.send(cNum);
 }
+// Right
 function servoButtonClickR() {
   var rNum = '08#';
   //console.log('rNum: ' + rNum);
   websock.send(rNum);
-}
-// Controlling servo motor with slider
-function sendSlider() {
-  var o = parseInt(document.getElementById('sliderPos').value).toString();
-  var sNum = '09#' + o;
-  //console.log('sNum: ' + sNum);
-  websock.send(sNum);
 }
 </script>
 </head>
@@ -208,10 +220,10 @@ function sendSlider() {
 <tr><td>NodeMCU v3</td><td> dev board</td></tr>
 <tr><td><br></td></tr>
 <tr><td><div id="ledstatus0"><b>LED0_RED</b></div></td></tr>
-<tr><td><button id="ledon0"  type="button" onclick="commandButtonclick(this);">On</button></td>
+<tr><td><button id="ledon0" type="button" onclick="commandButtonclick(this);">On</button></td>
 <td><button id="ledoff0" type="button" onclick="commandButtonclick(this);">Off</button></td></tr>
 <tr><td><div id="ledstatus1"><b>LED1_GREEN</b></div></td></tr>
-<tr><td><button id="ledon1"  type="button" onclick="commandButtonclick(this);">On</button></td>
+<tr><td><button id="ledon1" type="button" onclick="commandButtonclick(this);">On</button></td>
 <td><button id="ledoff1" type="button" onclick="commandButtonclick(this);">Off</button></td></tr>
 <tr><td><br></td></tr>
 <tr><td><b>WEATHER:</b></td></tr>
@@ -230,11 +242,13 @@ function sendSlider() {
 <td align="right"><div id="volts">xxxxxxx</div></td>
 <td>V (0-3.3V)</td></tr>
 <tr><td><br></td></tr>
-<tr><td><b>MOTOR:</b></td></tr>
-<tr><td align = "right"><button id="servoLeft" type="button" onclick="servoButtonClickL(this);">Left</button></td>
-<td align = "center"><button id="servoCenter" type="button" onclick="servoButtonClickC(this);">Centre</button></td>
-<td><button id="servoRight" type="button" onclick="servoButtonClickR(this);">Right</button></td></tr>
-<tr><td></td><td><input id="sliderPos" type="range" min="0" max="1023" step="1" oninput="sendSlider(this);"></input></td></tr>
+<tr><td><b>MOTOR PWM:</b></td></tr>
+<tr><td align="left"><button id="servoLeft" type="button" onclick="servoButtonClickL(this);">900us</button></td>
+<td align="left"><button id="servoCenter" type="button" onclick="servoButtonClickC(this);">1500us</button></td>
+<td align="left"><button id="servoRight" type="button" onclick="servoButtonClickR(this);">2100us</button></td></tr>
+</table>
+<table>
+<tr><td align="center"><progress id="progBar" value="600" max="1200">50 %</progress></td></tr>
 </table>
 </body>
 </html>
@@ -317,24 +331,20 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
           Serial.println("Command successfully executed, back-indication ok.");
         }
       }
-      // Convert left endpoint button click string to PWM value for motor control
+      // Convert left endpoint button click string to PWM value for motor
       else if ((payload[0] == '0') && (payload[1] == '6') && (payload[2] == '#')) {
-        myServo.writeMicroseconds(MOTOR_LOW);
+        myServo.writeMicroseconds(MOTOR_LOW); // 900us
+        webSocket.broadcastTXT(payload, length);
       }
-      // Convert midpoint button click string to PWM value for motor control
+      // Convert midpoint button click string to PWM value for motor
       else if ((payload[0] == '0') && (payload[1] == '7') && (payload[2] == '#')) {
-        myServo.writeMicroseconds(MOTOR_NEUTRAL);
+        myServo.writeMicroseconds(MOTOR_NEUTRAL); // 1500us
+        webSocket.broadcastTXT(payload, length);
       }
-      // Convert right endpoint button click string to PWM value for motor control
+      // Convert right endpoint button click string to PWM value for motor
       else if ((payload[0] == '0') && (payload[1] == '8') && (payload[2] == '#')) {
-        myServo.writeMicroseconds(MOTOR_HIGH);
-      }
-      // Convert slider input string to PWM value for motor control
-      else if ((payload[0] == '0') && (payload[1] == '9') && (payload[2] == '#')) {
-        String motor1 = (const char *)payload;
-        String motor2 = motor1.substring(3);
-        motorVal = motor2.toInt();
-        myServo.writeMicroseconds((int)(900 + (motorVal / 1023.) * (MOTOR_HIGH - MOTOR_LOW)));
+        myServo.writeMicroseconds(MOTOR_HIGH); // 2100us
+        webSocket.broadcastTXT(payload, length);
       }
       // If user input does not fit any of the tests above
       else {
