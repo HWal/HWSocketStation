@@ -60,8 +60,8 @@ WebSocketsServer webSocket = WebSocketsServer(81);
 Adafruit_BME280 bme;
 Servo myServo;
 
-static const char ssid[] = "Your_WiFi_ssid";
-static const char password[] = "Your_WiFi_password";
+static const char ssid[] = "Your_ssid";
+static const char password[] = "Your_password";
 
 // Define GPIOs
 const int LEDPIN0 = 12; // D6 on LoLin NodeMCU v3
@@ -87,7 +87,7 @@ float voltage = 0;         // Calculated voltage based on max value 3.3V
 long currMillis = 0;       // Milliseconds since ESP8266 started
 long oldMillis = 0;        // Container for millisecond value at last poll
 int counter = 0;           // To sequence polling of inputs in the loop()
-long millisInterval = 300; // Duration between pollings
+long millisInterval = 150; // Milliseconds between pollings
 float temperature = 0;
 float pressure = 0;
 // float altitude = 0;     // Not used
@@ -109,104 +109,103 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
 <script>
 // Create a Websock object (variable?) to allow communication between server and client
 var websock;
+
 function start() {
   websock = new WebSocket('ws://' + window.location.hostname + ':81/');
   websock.onopen = function(evt) { console.log('websock open'); };
   websock.onclose = function(evt) { console.log('websock close'); };
   websock.onerror = function(evt) { console.log(evt); };
+  // The onmessage function is called if a message is sent to the server,
+  // either from the client's javascript, or from the hardware process.
   websock.onmessage = function(evt) {
     console.log(evt);
+    var g = evt.data;
+    // Cyclic update of the measurands
+    if (g.substring(0, 3) === '00#') {
+      var a = g.substring(3);
+      document.getElementById('volts').innerHTML = a;
+    }
+    if (g.substring(0, 3) === '01#') {
+      var b = g.substring(3);
+      document.getElementById('temp').innerHTML = b;
+    }
+    if (g.substring(0, 3) === '02#') {
+      var c = g.substring(3);
+      document.getElementById('press').innerHTML = c;
+    }
+    if (g.substring(0, 3) === '03#') {
+      var d = g.substring(3);
+      document.getElementById('hum').innerHTML = d;
+    }
+    // Red LED
     var e = document.getElementById('ledstatus0');
-    if (evt.data === 'ledon0') {
+    if (g === 'ledon0') {
       e.style.color = 'Red';
     }
-    else if (evt.data === 'ledoff0') {
+    else if (g === 'ledoff0') {
       e.style.color = 'black';
     }
-    else if (evt.data === '04#') {
+    else if (g === '04#') {
       e.style.color = 'LightGray';
       window.alert('LED0 indikering feil');
     }
     else {
       console.log('unknown event');
     }
+    // Green LED
     var f = document.getElementById('ledstatus1');
-    if (evt.data === 'ledon1') {
+    if (g === 'ledon1') {
       f.style.color = 'LimeGreen';
     }
-    else if (evt.data === 'ledoff1') {
+    else if (g === 'ledoff1') {
       f.style.color = 'black';
     }
-    else if (evt.data === '05#') {
+    else if (g === '05#') {
       f.style.color = 'LightGray';
       window.alert('LED1 indikering feil');
     }
     else {
       console.log('unknown event');
     }
-    // Handling the measurands by cyclic generating of broadcast event
-    var g = evt.data;
-    var h;
-    if (g.substring(0, 3) === '00#') {
-      h = g.substring(3);
-      document.getElementById('volts').innerHTML = h;
-    }
-    var i;
-    if (g.substring(0, 3) === '01#') {
-      i = g.substring(3);
-      document.getElementById('temp').innerHTML = i;
-    }
-    var j;
-    if (g.substring(0, 3) === '02#') {
-      j = g.substring(3);
-      document.getElementById('press').innerHTML = j;
-    }
-    var k;
-    if (g.substring(0, 3) === '03#') {
-      k = g.substring(3);
-      document.getElementById('hum').innerHTML = k;
-    }
-    var p;
+    // Progressbar for servo position
     if (g.substring(0, 3) === '06#') {
-      p = '0';
-      document.getElementById('progBar').value = p;
+      var m = g.substring(3);
+      document.getElementById('progBar').value = m;
     }
-    var q;
-    if (g.substring(0, 3) === '07#') {
-      q = '600';
-      document.getElementById('progBar').value = q;
-    }
-    var r;
-    if (g.substring(0, 3) === '08#') {
-      r = '1200';
-      document.getElementById('progBar').value = r;
-    }
-  };
-}
+  }; // End of function onmessage
+} // End of function Start
 
-// The following functions are called from the client html page
-// LED On - Off buttons
+// The following functions are called with button clicks
+// from the client(s) html page(s)
+// LED On - Off
 function commandButtonclick(clickVal) {
   websock.send(clickVal.id);
 }
-// Position servo motor
-// Left
-function servoButtonClickL() {
-  var lNum = '06#';
-  //console.log('lNum: ' + lNum);
-  websock.send(lNum);
+// Servo positioning
+function servoMin() {
+  var numMin = '08#';
+  //console.log('numMin: ' + numMin);
+  websock.send(numMin); // Send only the message header
 }
-// Center
-function servoButtonClickC() {
-  var cNum = '07#';
-  //console.log('cNum: ' + cNum);
-  websock.send(cNum);
+function servoDn() {
+  var numA = '09#';
+  //console.log('numA: ' + numA);
+  websock.send(numA); // Send only the message header
 }
-// Right
-function servoButtonClickR() {
-  var rNum = '08#';
-  //console.log('rNum: ' + rNum);
-  websock.send(rNum);
+function servoCenter() {
+  var numCenter = '10#';
+  //console.log('numCenter: ' + numCenter);
+  websock.send(numCenter); // Send only the message header
+}
+function servoUp() {
+  var numF = '11#';
+  //console.log('numF: ' + numF);
+  websock.send(numF); // Send only the message header
+}
+function servoMax() {
+  var maxNum = '12#';
+  //console.log('maxNum: ' + maxNum);
+  websock.send(maxNum); // Send only the message header
 }
 </script>
 </head>
@@ -243,12 +242,14 @@ function servoButtonClickR() {
 <td>V (0-3.3V)</td></tr>
 <tr><td><br></td></tr>
 <tr><td><b>MOTOR PWM:</b></td></tr>
-<tr><td align="left"><button id="servoLeft" type="button" onclick="servoButtonClickL(this);">900us</button></td>
-<td align="left"><button id="servoCenter" type="button" onclick="servoButtonClickC(this);">1500us</button></td>
-<td align="left"><button id="servoRight" type="button" onclick="servoButtonClickR(this);">2100us</button></td></tr>
+<tr><td align="center"><button id="Mi" type="button" onclick="servoMin(this);">L</button>
+<button id="Dn" type="button" onclick="servoDn(this);"><</button>
+<button id="Ce" type="button" onclick="servoCenter(this);">N</button>
+<button id="Up" type="button" onclick="servoUp(this);">></button>
+<button id="Ma" type="button" onclick="servoMax(this);">R</button></td></tr>
 </table>
 <table>
-<tr><td align="center"><progress id="progBar" value="600" max="1200">50 %</progress></td></tr>
+<tr><td align="center"><progress id="progBar" value="0" max="1200">50 %</progress></td></tr>
 </table>
 </body>
 </html>
@@ -270,19 +271,6 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
       {
         IPAddress ip = webSocket.remoteIP(num);
         Serial.printf("[%u] Connected from %d.%d.%d.%d url: %s\r\n", num, ip[0], ip[1], ip[2], ip[3], payload);
-        // Send the current LED status
-        if (LEDStatus0) {
-          webSocket.sendTXT(num, LEDON0, strlen(LEDON0));
-        }
-        else {
-          webSocket.sendTXT(num, LEDOFF0, strlen(LEDOFF0));
-        }
-        if (LEDStatus1) {
-          webSocket.sendTXT(num, LEDON1, strlen(LEDON1));
-        }
-        else {
-          webSocket.sendTXT(num, LEDOFF1, strlen(LEDOFF1));
-        }
       }
       break;
     case WStype_TEXT:
@@ -331,28 +319,40 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
           Serial.println("Command successfully executed, back-indication ok.");
         }
       }
-      // Convert left endpoint button click string to PWM value for motor
-      else if ((payload[0] == '0') && (payload[1] == '6') && (payload[2] == '#')) {
-        myServo.writeMicroseconds(MOTOR_LOW); // 900us
-        webSocket.broadcastTXT(payload, length);
-      }
-      // Convert midpoint button click string to PWM value for motor
-      else if ((payload[0] == '0') && (payload[1] == '7') && (payload[2] == '#')) {
-        myServo.writeMicroseconds(MOTOR_NEUTRAL); // 1500us
-        webSocket.broadcastTXT(payload, length);
-      }
-      // Convert right endpoint button click string to PWM value for motor
+      // Servo command L
       else if ((payload[0] == '0') && (payload[1] == '8') && (payload[2] == '#')) {
-        myServo.writeMicroseconds(MOTOR_HIGH); // 2100us
-        webSocket.broadcastTXT(payload, length);
+        myServo.writeMicroseconds(MOTOR_LOW); // 900us
+        motorVal = MOTOR_LOW;
       }
-      // If user input does not fit any of the tests above
+      // Servo command <
+      else if ((payload[0] == '0') && (payload[1] == '9') && (payload[2] == '#')) {
+        if (motorVal >= (MOTOR_LOW + 150)) {
+          motorVal -= 150;
+          myServo.writeMicroseconds(motorVal); // Decrease by 150us
+        }
+      }
+      // Servo command N
+      else if ((payload[0] == '1') && (payload[1] == '0') && (payload[2] == '#')) {
+        myServo.writeMicroseconds(MOTOR_NEUTRAL); // 1500us
+        motorVal = MOTOR_NEUTRAL;
+      }
+      // Servo command >
+      else if ((payload[0] == '1') && (payload[1] == '1') && (payload[2] == '#')) {
+        if (motorVal <= (MOTOR_HIGH - 150)) {
+           motorVal += 150;
+           myServo.writeMicroseconds(motorVal); // Increase by 150us
+        }
+      }
+      // Servo command R
+      else if ((payload[0] == '1') && (payload[1] == '2') && (payload[2] == '#')) {
+        myServo.writeMicroseconds(MOTOR_HIGH); // 2100us
+        motorVal = MOTOR_HIGH;
+      }
+      // If user input does not fit any of the above tests
       else {
         Serial.println();
         Serial.println("User input rejected, unknown error.");
       }
-      // send data to all connected clients
-      // webSocket.broadcastTXT(payload, length);
       break;
     case WStype_BIN:
       Serial.printf("[%u] get binary length: %u\r\n", num, length);
@@ -372,7 +372,6 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
 static void writeLED0(bool LEDon0)
 {
   LEDStatus0 = LEDon0;
-  // Note inverted logic for Adafruit HUZZAH board
   if (LEDon0) {
     digitalWrite(LEDPIN0, 1);
   }
@@ -387,7 +386,6 @@ static void writeLED0(bool LEDon0)
 static void writeLED1(bool LEDon1)
 {
   LEDStatus1 = LEDon1;
-  // Note inverted logic for Adafruit HUZZAH board
   if (LEDon1) {
     digitalWrite(LEDPIN1, 1);
   }
@@ -460,6 +458,7 @@ void setup()
   // Set position of servo motor to midpoint at startup
   myServo.attach(MOTORPIN);
   myServo.writeMicroseconds(MOTOR_NEUTRAL);
+  motorVal = 1500;
 
   WiFiMulti.addAP(ssid, password);
 
@@ -505,7 +504,7 @@ void loop()
   currMillis = millis(); // Total milliseconds since last boot
   if ((currMillis - oldMillis) > millisInterval) {
     oldMillis = currMillis;
-    // Read voltage from hardware and broadcast to clients
+    // Read voltage and broadcast to clients
     if (counter == 0) {
       adcVal = analogRead(A0); // 10 bits - returns int in [0, 1023]
       voltage = 3.3 * adcVal / 1023;
@@ -513,21 +512,21 @@ void loop()
       String str01 = String(voltage);
       String str02 = str00 + str01;
       webSocket.broadcastTXT(str02);
-    // Read temperature from hardware and broadcast to clients
+    // Read temperature and broadcast to clients
     } else if (counter == 1) {
       temperature = bme.readTemperature();
       String str10 = "01#";
       String str11 = String(temperature);
       String str12 = str10 + str11;
       webSocket.broadcastTXT(str12);
-    // Read pressure from hardware and broadcast to clients
+    // Read pressure and broadcast to clients
     } else if (counter == 2) {
       pressure = bme.readPressure() / 100.0F;
       String str20 = "02#";
       String str21 = String(pressure);
       String str22 = str20 + str21;
       webSocket.broadcastTXT(str22);
-    // Read humidity from hardware and broadcast to clients
+    // Read humidity and broadcast to clients
     } else if (counter == 3) {
       humidity = bme.readHumidity();
       String str30 = "03#";
@@ -564,8 +563,15 @@ void loop()
         webSocket.broadcastTXT(str52);
         indOk1 = false;
       }
+    // Check position of motor (motorVal) and broadcast to clients
+    } else if (counter == 6) {
+      String str60 = "06#";
+      int progBarPos = motorVal - 900;
+      String str61 = String(progBarPos);
+      String str62 = str60 + str61;
+      webSocket.broadcastTXT(str62);
       counter = -1;
-    } 
+    }
     counter++;
     /* Not used in this application:
     altitude = bme.readAltitude(SEALEVELPRESSURE_HPA);*/
