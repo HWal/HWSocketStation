@@ -9,6 +9,22 @@ Communication is based on the Websocket protocol. To connect from the outside wo
 
 With this setup you can send two commands on separate digital outputs, get back-indication on two separate digital inputs, read an analog measurand, and control a servo motor. The motor can be controlled to both end positions and midpoint, as well as in ten smaller steps, all with buttons. The current servo position is shown in a progress bar below the buttons.
 
+Hardware
+--------
+* LoLin NodeMCU V3 breakout board
+* 10k potmeter
+* R/C servo (eg. HEXTRONIK HXT900)
+* BME280 digital sensor module (Temperature, Humidity, Pressure)
+* 2 x 270ohm resistors
+* 2 x 1.5kohm resistors
+* 2 x 15kohm resistors
+* One green LED and one red LED
+* A breadboard
+* Some connecting wire
+* Optional: A 5V power source to make the arrangement stand-alone
+
+All items are cheap, and can be found on Ebay.
+
 Required software
 -----------------
 The sketch "WebSocketServer_RemoteStation.ino", plus the necessary driver and Arduino libraries (see below).

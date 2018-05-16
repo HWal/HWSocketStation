@@ -61,7 +61,7 @@ Adafruit_BME280 bme;
 Servo myServo;
 
 static const char ssid[] = "Your_ssid";
-static const char password[] = "Your_password";
+static const char password[] = "Your_WiFi_password";
 
 // Define GPIOs
 const int LEDPIN0 = 12; // D6 on LoLin NodeMCU v3
@@ -107,7 +107,7 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
 </style>
 
 <script>
-// Create a Websock object (variable?) to allow communication between server and client
+// Create a Websock object to allow communication between server and client
 var websock;
 
 function start() {
@@ -115,8 +115,9 @@ function start() {
   websock.onopen = function(evt) { console.log('websock open'); };
   websock.onclose = function(evt) { console.log('websock close'); };
   websock.onerror = function(evt) { console.log(evt); };
-  // The onmessage function is called if a message is sent to the server,
-  // either from the client's javascript, or from the hardware process.
+  // The onmessage function is called if a message is sent to the server
+  // from the Arduino hardware code.
+  // Example message: webSocket.broadcastTXT(str52);
   websock.onmessage = function(evt) {
     console.log(evt);
     var g = evt.data;
@@ -175,8 +176,10 @@ function start() {
   }; // End of function onmessage
 } // End of function Start
 
-// The following functions are called with button clicks
-// from the client(s) html page(s)
+// The following functions are called with button clicks from the client
+// html page. Each websock.send(...) generates a websocket event and
+// calls the webSocketEvent(...) method in the C code.
+
 // LED On - Off
 function commandButtonclick(clickVal) {
   websock.send(clickVal.id);
