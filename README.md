@@ -7,7 +7,7 @@ This project is developed for a test stand (see schematic) to explore some of th
 
 Communication is based on the Websocket protocol. To connect from the outside world, you need to forward ports 80 and 81 in your router.
 
-With this setup you can send two commands on separate digital outputs, get back-indication on two separate digital inputs, read an analog measurand, and control a servo motor. The motor can be controlled to both end positions and midpoint, as well as in ten smaller steps, all with buttons. The current servo position is shown in a progress bar below the buttons.
+With this setup you can send two commands on separate digital outputs, get back-indication on two separate digital inputs, read an analog measurand, get some weather data, and control a servo motor. The motor can be controlled to both end positions and midpoint, as well as in ten smaller steps, all with buttons. The current servo position is shown in a progress bar below the buttons.
 
 Hardware
 --------
