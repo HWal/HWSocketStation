@@ -5,9 +5,9 @@ NodeMCU V3 Remote Control Station
 
 This project is developed for a test stand (see schematic) to explore some of the features of ESP8266-12E WiFi module. Hopefully you will be able to modify the code and adapt it to your own needs.
 
-Communication is based on the Websocket protocol. To connect from the outside world, you need to forward ports 80 and 81 in your router.
+Communication is based on the Websocket protocol (ws). To connect from the outside world, you need to forward ports 80 and 81 in your router.
 
-With this setup you can send two commands on separate digital outputs, get back-indication on two separate digital inputs, read an analog measurand, get some weather data, and control a servo motor. The motor can be controlled to both end positions and midpoint, as well as in ten smaller steps, all with buttons. The current servo position is shown in a progress bar below the buttons.
+With this setup you can send two commands on separate digital outputs, get back-indication on two separate digital inputs, read an analog measurand, get some weather data, and control a servo motor. The motor can be controlled to both end positions and midpoint, as well as in nine small steps, all with buttons. The current servo position is shown in a progress bar below the buttons.
 
 Hardware
 --------
@@ -21,20 +21,21 @@ Hardware
 * One green LED and one red LED
 * A breadboard
 * Some connecting wire
+* A suitable USB cable
 * Optional: A 5V power source to make the arrangement stand-alone
 
 All items are cheap, and can be found on Ebay.
 
 Required software
 -----------------
-The sketch "WebSocketServer_RemoteStation.ino", plus the necessary driver and Arduino libraries (see below).
+The sketch "WebSocketServer_RemoteStation.ino", the necessary COM/serial driver, and Arduino libraries (see below).
 
 Get started (Windows 10)
 ------------------------
 Install the latest Arduino for Windows from here: https://www.arduino.cc/en/Main/Software
 
-Configuration of the Arduino application
-----------------------------------------
+Configure the Arduino application
+---------------------------------
 In File->Preferences->Settings, enter this additional Boards Manager URL: http://arduino.esp8266.com/stable/package_esp8266com_index.json .
 
 In Tools->Board:->Boards Manager, find and install the library "esp8266 by ESP8266 Community".
@@ -51,10 +52,12 @@ Download Adafruit common sensor library from https://github.com/adafruit/Adafrui
 
 Download Adafruit BME280 sensor library from https://github.com/adafruit/Adafruit_BME280_Library . Choose "Download ZIP", extract the .zip file and move it to the Arduino library folder. 
 
-Note: The file Adafruit_BME280.h contains the sensor I2C address on line 32. To be able to read data from the sensor, you may have to change the address from 0x77 to 0x76.
+Note: The file Adafruit_BME280.h contains the BME280 sensor I2C address on line 32. To be able to read data from it, you may have to change the address from 0x77 to 0x76.
 
 Connect to the webpage
 ----------------------
-You need to update the Arduino sketch with the ssid and WiFi password for your own local network. You will find the variables on lines 63 and 64.
+You need to update the Arduino sketch with the ssid and WiFi password for your local network. You will find these variables on lines 63 and 64. Compile and upload the sketch. As soon as the upload reaches 100%, open the serial monitor and check that the board connects to your WiFi network.
 
-When the board starts, the ip address of the board is reported on the serial monitor. Type this address into the address field of your browser on a PC or mobile phone. From the outside world you need to type your public ip address. This requires that you have performed the port forwarding mentioned above.
+The ip address of the board is reported on the serial monitor. Type this address into the address field of your browser on a PC or mobile phone. From the outside world you need to type your public ip address. This requires that you have performed the port forwarding mentioned above.
+
+You should now have a simple webpage on your browser, allowing you to manipulate the controls and view the data readings.
