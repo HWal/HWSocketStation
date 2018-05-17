@@ -3,7 +3,7 @@
 NodeMCU V3 Remote Control Station
 =================================
 
-This project is developed for a test stand (see schematic) to explore some of the features of ESP8266-12E WiFi module. Hopefully you will be able to modify the code and adapt it to your own needs.
+This project is developed for a test stand (see schematic) to explore some of the features of ESP8266-12E WiFi module. Hopefully you will be able to download the code and modify it according to your own needs.
 
 Communication is based on the Websocket protocol (ws). To connect from the outside world, you need to forward ports 80 and 81 in your router.
 
@@ -56,7 +56,7 @@ Note: The file Adafruit_BME280.h contains the BME280 sensor I2C address on line 
 
 Connect to the webpage
 ----------------------
-You need to update the Arduino sketch with the ssid and WiFi password for your local network. You will find these variables on lines 63 and 64. Compile and upload the sketch. As soon as the upload reaches 100%, open the serial monitor and check that the board connects to your WiFi network.
+You need to update the Arduino sketch with the ssid and WiFi password for your local network. You will find these variables on lines 63 and 64. Compile and upload the sketch. As soon as the upload reaches 100%, open the serial monitor and check that the board connects to your local WiFi network.
 
 The ip address of the board is reported on the serial monitor. Type this address into the address field of your browser on a PC or mobile phone. From the outside world you need to type your public ip address. This requires that you have performed the port forwarding mentioned above.
 
