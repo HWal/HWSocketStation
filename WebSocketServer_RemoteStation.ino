@@ -20,7 +20,8 @@
 //
 // The value of the internal pull-resistors are between 30k and 100k ohms.
 // A google search shows that using them is not the way to go (difficult).
-// The 3.3V supply may deliver up to 800mA (also from google).
+//
+// The 3.3V supply on the board may deliver up to 800mA (also from google).
 //**************************************************************************
 // Logic input/output levels with 3.3V power supply to ESP8266:
 // LOW: -0.3V -> 0.825V, HiGH: 2.475V -> 3.6V
@@ -35,7 +36,7 @@
 //**************************************************************************
 
 #include <ESP8266WiFi.h>
-//#include <WiFiClient.h> // Already included in ESP8266WiFi.h
+// #include <WiFiClient.h> // Already included in ESP8266WiFi.h
 #include <ESP8266WiFiMulti.h>
 #include <WebSocketsServer.h>
 #include <Hash.h>
@@ -61,7 +62,7 @@ Adafruit_BME280 bme;
 Servo myServo;
 
 static const char ssid[] = "Your_ssid";
-static const char password[] = "Your_WiFi_password";
+static const char password[] = "Your_password";
 
 // Define GPIOs
 const int LEDPIN0 = 12; // D6 on LoLin NodeMCU v3
@@ -94,8 +95,8 @@ float pressure = 0;
 float humidity = 0;
 int motorVal;
 
-// The following lines declare a string that goes into flash memory:
-// The string is defined by: "rawliteral(... any text / characters... )rawliteral"
+// The following lines declare a string that goes into flash memory.
+// Defined by: "rawliteral(... any text / characters... )rawliteral"
 static const char PROGMEM INDEX_HTML[] = R"rawliteral(
 <!DOCTYPE html>
 <html>
@@ -115,9 +116,11 @@ function start() {
   websock.onopen = function(evt) { console.log('websock open'); };
   websock.onclose = function(evt) { console.log('websock close'); };
   websock.onerror = function(evt) { console.log(evt); };
-  // The onmessage function is called if a message is sent to the server
-  // from the Arduino hardware code.
-  // Example message: webSocket.broadcastTXT(str52);
+  
+  // The onmessage function below is called when a message
+  // is sent to the server from the Arduino hardware code.
+  // Example call: webSocket.broadcastTXT(str52);
+  
   websock.onmessage = function(evt) {
     console.log(evt);
     var g = evt.data;
@@ -173,8 +176,8 @@ function start() {
       var m = g.substring(3);
       document.getElementById('progBar').value = m;
     }
-  }; // End of function onmessage
-} // End of function Start
+  }; // End of onmessage function
+} // End of start function
 
 // The following functions are called with button clicks from the client
 // html page. Each websock.send(...) generates a websocket event and
@@ -257,7 +260,7 @@ function servoMax() {
 </body>
 </html>
 )rawliteral";
-//End of what goes into flash memory
+// End of what goes into flash memory
 
 
 
@@ -281,7 +284,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
       // Set pin GPIO12 (D6) high
       if (strcmp(LEDON0, (const char *)payload) == 0) {
         writeLED0(true);
-        delay(50); //Simulate time to operate a relay
+        delay(20); //Simulate time to operate a relay
         // Check expected back-indication on GPIO13 (D7)
         if (digitalRead(INPIN0) == 1) {
           // send data to all connected clients
@@ -292,7 +295,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
       // Set pin GPIO12 (D6) low
       else if (strcmp(LEDOFF0, (const char *)payload) == 0) {
         writeLED0(false);
-        delay(50); //Simulate time to operate a relay
+        delay(20); //Simulate time to operate a relay
         // Check expectedback-indication on GPIO13 (D7)
         if (digitalRead(INPIN0) == 0) {
           // send data to all connected clients
@@ -303,7 +306,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
       // Set pin GPIO14 (D5) high
       else if (strcmp(LEDON1, (const char *)payload) == 0) {
         writeLED1(true);
-        delay(50); //Simulate time to operate a relay
+        delay(20); //Simulate time to operate a relay
         // Check expected back-indication on GPIO15 (D8)
         if (digitalRead(INPIN1) == 1) {
           // send data to all connected clients
@@ -314,7 +317,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
       // Set pin GPIO14 (D5) low
       else if (strcmp(LEDOFF1, (const char *)payload) == 0) {
         writeLED1(false);
-        delay(50); //Simulate time to operate a relay
+        delay(20); //Simulate time to operate a relay
         // Check expected back-indication on GPIO15 (D8)
         if (digitalRead(INPIN1) == 0) {
           // send data to all connected clients
@@ -438,7 +441,7 @@ void setup()
 
   Serial.begin(115200);
 
-  //Serial.setDebugOutput(true);
+  // Serial.setDebugOutput(true);
 
   Serial.println();
   Serial.println();
