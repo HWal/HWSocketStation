@@ -1,4 +1,13 @@
 //**************************************************************************
+// Program for LoLin NodeMCU V3 board with onboard ESP8266-12E WiFi module.
+// All views and controls are presented on a webpage.
+// + Control two digital outputs
+// + Read the corresponding back-indication on two digital inputs
+// + Read one analog measurand
+// + Control one R/C servo motor
+// + Read barometric pressure, temperature and humidity from a BME280
+//   weather sensor
+//**************************************************************************
 // GPIO(MCU pin)     NodeMCU V3 pin                        Pull Up / Down
 //    0              D3  Boot select - Use if it works ok      Pull Up
 //    1              D10 UART0 TX Serial - Avoid it            Pull Up
@@ -47,14 +56,12 @@
 // #include <Wire.h> // Already included in Adafruit_BME280.h
 #include <Servo.h>
 
-// #define SEALEVELPRESSURE_HPA 1013.25 // Not used
+// #define SEALEVELPRESSURE_HPA 1013.25 // Not used in this program
 #define MOTOR_LOW 900
 #define MOTOR_NEUTRAL 1500
 #define MOTOR_HIGH 2100
 
 MDNSResponder mdns;
-static void writeLED0(bool);
-static void writeLED1(bool);
 ESP8266WiFiMulti WiFiMulti;
 ESP8266WebServer server(80);
 WebSocketsServer webSocket = WebSocketsServer(81);
@@ -62,36 +69,36 @@ Adafruit_BME280 bme;
 Servo myServo;
 
 static const char ssid[] = "Your_ssid";
-static const char password[] = "Your_password";
+static const char password[] = "Your_WiFi_password";
 
 // Define GPIOs
-const int LEDPIN0 = 12; // D6 on LoLin NodeMCU v3
-const int LEDPIN1 = 14; // D5       - " -
-const int INPIN0 = 13;  // D7       - " -
-const int INPIN1 = 15;  // D8       - " -
-const int MOTORPIN = 2; // D4       - " -
-bool indOk0 = false;    // LED0 send missing indication popup only once
-bool indOk1 = false;    // LED1                - " -
+const int OUTPIN0 = 12; // D6   On LoLin NodeMCU V3
+const int OUTPIN1 = 14; // D5          - " -
+const int INPIN0 = 13;  // D7          - " -
+const int INPIN1 = 15;  // D8          - " -
+const int MOTORPIN = 2; // D4          - " -
+bool indOk0 = false;    // LED0 Indication error popup only once
+bool indOk1 = false;    // LED1        - " -
 
-// Variables to keep current LED status: false = OFF, true = ON
-bool LEDStatus0;
-bool LEDStatus1;
+// Variables to keep output channel status: false = OFF, true = ON
+bool ch0Status;
+bool ch1Status;
 
-// C string arrays used as command words sent through the Web Socket
-const char LEDON0[] = "ledon0";
-const char LEDOFF0[] = "ledoff0";
-const char LEDON1[] = "ledon1";
-const char LEDOFF1[] = "ledoff1";
+// C char arrays serving as command words sent through the Web Socket
+const char CH0ON[] = "ch0On";
+const char CH0OFF[] = "ch0Off";
+const char CH1ON[] = "ch1On";
+const char CH1OFF[] = "ch1Off";
 
 int adcVal = 0;            // ADC value from analog input on pin A0
 float voltage = 0;         // Calculated voltage based on max value 3.3V
 long currMillis = 0;       // Milliseconds since ESP8266 started
 long oldMillis = 0;        // Container for millisecond value at last poll
-int counter = 0;           // To sequence polling of inputs in the loop()
+int counter = 0;           // Sequence polling of inputs in the loop()
 long millisInterval = 150; // Milliseconds between pollings
 float temperature = 0;
 float pressure = 0;
-// float altitude = 0;     // Not used
+// float altitude = 0;     // Not used in this program
 float humidity = 0;
 int motorVal;
 
@@ -108,7 +115,7 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
 </style>
 
 <script>
-// Create a Websock object to allow communication between server and client
+// Create a Websock object for the javascript
 var websock;
 
 function start() {
@@ -141,32 +148,32 @@ function start() {
       var d = g.substring(3);
       document.getElementById('hum').innerHTML = d;
     }
-    // Red LED
-    var e = document.getElementById('ledstatus0');
-    if (g === 'ledon0') {
+    // Ch0 Red LED
+    var e = document.getElementById('ch0Status');
+    if (g === 'ch0On') {
       e.style.color = 'Red';
     }
-    else if (g === 'ledoff0') {
+    else if (g === 'ch0Off') {
       e.style.color = 'black';
     }
     else if (g === '04#') {
       e.style.color = 'LightGray';
-      window.alert('LED0 indikering feil');
+      window.alert('CH0 indikering feil');
     }
     else {
       console.log('unknown event');
     }
-    // Green LED
-    var f = document.getElementById('ledstatus1');
-    if (g === 'ledon1') {
+    // Ch1 Green LED
+    var f = document.getElementById('ch1Status');
+    if (g === 'ch1On') {
       f.style.color = 'LimeGreen';
     }
-    else if (g === 'ledoff1') {
+    else if (g === 'ch1Off') {
       f.style.color = 'black';
     }
     else if (g === '05#') {
       f.style.color = 'LightGray';
-      window.alert('LED1 indikering feil');
+      window.alert('CH1 indikering feil');
     }
     else {
       console.log('unknown event');
@@ -179,7 +186,7 @@ function start() {
   }; // End of onmessage function
 } // End of start function
 
-// The following functions are called with button clicks from the client
+// The following functions are called from button clicks on the client
 // html page. Each websock.send(...) generates a websocket event and
 // calls the webSocketEvent(...) method in the C code.
 
@@ -224,12 +231,12 @@ function servoMax() {
 <tr><td><b>ESP8266</b></td><td><b> WEBSOCKET</b></td></tr>
 <tr><td>NodeMCU v3</td><td> dev board</td></tr>
 <tr><td><br></td></tr>
-<tr><td><div id="ledstatus0"><b>LED0_RED</b></div></td></tr>
-<tr><td><button id="ledon0" type="button" onclick="commandButtonclick(this);">On</button></td>
-<td><button id="ledoff0" type="button" onclick="commandButtonclick(this);">Off</button></td></tr>
-<tr><td><div id="ledstatus1"><b>LED1_GREEN</b></div></td></tr>
-<tr><td><button id="ledon1" type="button" onclick="commandButtonclick(this);">On</button></td>
-<td><button id="ledoff1" type="button" onclick="commandButtonclick(this);">Off</button></td></tr>
+<tr><td><div id="ch0Status"><b>CH0_RED_LED</b></div></td></tr>
+<tr><td><button id="ch0On" type="button" onclick="commandButtonclick(this);">On</button></td>
+<td><button id="ch0Off" type="button" onclick="commandButtonclick(this);">Off</button></td></tr>
+<tr><td><div id="ch1Status"><b>CH1_GREEN_LED</b></div></td></tr>
+<tr><td><button id="ch1On" type="button" onclick="commandButtonclick(this);">On</button></td>
+<td><button id="ch1Off" type="button" onclick="commandButtonclick(this);">Off</button></td></tr>
 <tr><td><br></td></tr>
 <tr><td><b>WEATHER:</b></td></tr>
 <tr><td><b>Temperature</b>&nbsp</td>
@@ -281,11 +288,13 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
       break;
     case WStype_TEXT:
       Serial.printf("[%u] get Text: %s\r\n", num, payload);
+
       // Set pin GPIO12 (D6) high
-      if (strcmp(LEDON0, (const char *)payload) == 0) {
-        writeLED0(true);
+      if (strcmp(CH0ON, (const char *)payload) == 0) {
+        ch0Status = true;
+        digitalWrite(OUTPIN0, 1);
         delay(20); //Simulate time to operate a relay
-        // Check expected back-indication on GPIO13 (D7)
+        // Check back-indication on GPIO13 (D7)
         if (digitalRead(INPIN0) == 1) {
           // send data to all connected clients
           webSocket.broadcastTXT(payload, length);
@@ -293,10 +302,11 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
         }
       }
       // Set pin GPIO12 (D6) low
-      else if (strcmp(LEDOFF0, (const char *)payload) == 0) {
-        writeLED0(false);
+      else if (strcmp(CH0OFF, (const char *)payload) == 0) {
+        ch0Status = false;
+        digitalWrite(OUTPIN0, 0);
         delay(20); //Simulate time to operate a relay
-        // Check expectedback-indication on GPIO13 (D7)
+        // Check back-indication on GPIO13 (D7)
         if (digitalRead(INPIN0) == 0) {
           // send data to all connected clients
           webSocket.broadcastTXT(payload, length);
@@ -304,10 +314,11 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
         }
       }
       // Set pin GPIO14 (D5) high
-      else if (strcmp(LEDON1, (const char *)payload) == 0) {
-        writeLED1(true);
+      else if (strcmp(CH1ON, (const char *)payload) == 0) {
+        ch1Status = true;
+        digitalWrite(OUTPIN1, 1);
         delay(20); //Simulate time to operate a relay
-        // Check expected back-indication on GPIO15 (D8)
+        // Check back-indication on GPIO15 (D8)
         if (digitalRead(INPIN1) == 1) {
           // send data to all connected clients
           webSocket.broadcastTXT(payload, length);
@@ -315,10 +326,11 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
         }
       }
       // Set pin GPIO14 (D5) low
-      else if (strcmp(LEDOFF1, (const char *)payload) == 0) {
-        writeLED1(false);
+      else if (strcmp(CH1OFF, (const char *)payload) == 0) {
+        ch1Status = false;
+        digitalWrite(OUTPIN1, 0);
         delay(20); //Simulate time to operate a relay
-        // Check expected back-indication on GPIO15 (D8)
+        // Check back-indication on GPIO15 (D8)
         if (digitalRead(INPIN1) == 0) {
           // send data to all connected clients
           webSocket.broadcastTXT(payload, length);
@@ -374,34 +386,6 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
 
 
 
-// Write command to output pin LEDPIN0
-static void writeLED0(bool LEDon0)
-{
-  LEDStatus0 = LEDon0;
-  if (LEDon0) {
-    digitalWrite(LEDPIN0, 1);
-  }
-  else {
-    digitalWrite(LEDPIN0, 0);
-  }
-}
-
-
-
-// Write command to output pin LEDPIN1
-static void writeLED1(bool LEDon1)
-{
-  LEDStatus1 = LEDon1;
-  if (LEDon1) {
-    digitalWrite(LEDPIN1, 1);
-  }
-  else {
-    digitalWrite(LEDPIN1, 0);
-  }
-}
-
-
-
 void handleRoot()
 {
   server.send_P(200, "text/html", INDEX_HTML);
@@ -430,10 +414,13 @@ void handleNotFound()
 void setup()
 {
   // Define and initialize command pins
-  pinMode(LEDPIN0, OUTPUT);
-  writeLED0(false);
-  pinMode(LEDPIN1, OUTPUT);
-  writeLED1(false);
+  pinMode(OUTPIN0, OUTPUT);
+  digitalWrite(OUTPIN0, 0);
+  ch0Status = false;
+  pinMode(OUTPIN1, OUTPUT);
+  digitalWrite(OUTPIN1, 0);
+  ch1Status = false;
+  
 
   // Define back-indication  pins
   pinMode(INPIN0, INPUT);
@@ -457,11 +444,11 @@ void setup()
   bool status;
   status = bme.begin();  
   if (!status) {
-    Serial.println("Could not find a valid BME280 sensor, check wiring!");
+    Serial.println("Could not find a valid BME280 sensor, check address and/or wiring!");
     while (1);
   }
 
-  // Set position of servo motor to midpoint at startup
+  // Set position of servo motor to midpoint on startup
   myServo.attach(MOTORPIN);
   myServo.writeMicroseconds(MOTOR_NEUTRAL);
   motorVal = 1500;
@@ -539,37 +526,37 @@ void loop()
       String str31 = String(humidity);
       String str32 = str30 + str31;
       webSocket.broadcastTXT(str32);
-    // Check that LED0 indication is correct
+    // Check ch0 indication
     } else if (counter == 4) {
-      if (digitalRead(INPIN0) == LEDStatus0) {
+      if (digitalRead(INPIN0) == ch0Status) {
         indOk0 = true;
-        if (LEDStatus0 == true) {
-          webSocket.broadcastTXT("ledon0");
+        if (ch0Status == true) {
+          webSocket.broadcastTXT("ch0On");
         } else {
-          webSocket.broadcastTXT("ledoff0");
+          webSocket.broadcastTXT("ch0Off");
         }
       }
-      if ((digitalRead(INPIN0) != LEDStatus0) && (indOk0 == true)) {
+      if ((digitalRead(INPIN0) != ch0Status) && (indOk0 == true)) {
         String str42 = "04#";
         webSocket.broadcastTXT(str42);
         indOk0 = false;
       }
-    // Check that LED1 indication is correct
+    // Check ch1 indication
     } else if (counter == 5) {
-      if (digitalRead(INPIN1) == LEDStatus1) {
+      if (digitalRead(INPIN1) == ch1Status) {
         indOk1 = true;
-        if (LEDStatus1 == true) {
-          webSocket.broadcastTXT("ledon1");
+        if (ch1Status == true) {
+          webSocket.broadcastTXT("ch1On");
         } else {
-          webSocket.broadcastTXT("ledoff1");
+          webSocket.broadcastTXT("ch1Off");
         }
       }
-      if ((digitalRead(INPIN1) != LEDStatus1) && (indOk1 == true)) {
+      if ((digitalRead(INPIN1) != ch1Status) && (indOk1 == true)) {
         String str52 = "05#";
         webSocket.broadcastTXT(str52);
         indOk1 = false;
       }
-    // Check position of motor (motorVal) and broadcast to clients
+    // Check position of motor (motorVal) and broadcast
     } else if (counter == 6) {
       String str60 = "06#";
       int progBarPos = motorVal - 900;
@@ -579,7 +566,7 @@ void loop()
       counter = -1;
     }
     counter++;
-    /* Not used in this application:
+    /* Not used in this program:
     altitude = bme.readAltitude(SEALEVELPRESSURE_HPA);*/
   }
 }
