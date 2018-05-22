@@ -1,8 +1,8 @@
 //**************************************************************************
-// Program for LoLin NodeMCU V3 board with onboard ESP8266-12E WiFi module.
-// All views and controls are presented on a webpage.
+// Code for the LoLin NodeMCU V3 board with onboard ESP8266-12E WiFi module.
+// The views and controls are presented on a webpage.
 // + Control two digital outputs
-// + Read the corresponding back-indication on two digital inputs
+// + Read corresponding back-indications on two digital inputs
 // + Read one analog measurand
 // + Control one R/C servo motor
 // + Read barometric pressure, temperature and humidity from a BME280
