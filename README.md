@@ -7,9 +7,9 @@ This code is developed for a test stand (see schematic) to explore some of the f
 
 Communication is based on the Websocket protocol (ws). To connect from the outside world, you need to forward ports 80 and 81 in your router.
 
-More than one client can connect to the module (server) at the same time, and perform readings and commands. If one client activates an LED or moves the servo motor, another client can turn the LED off and/or move the motor to another position. Indication of what one client does is broadcast to all clients.
-
 With this setup you can send two commands on separate digital outputs, get back-indications on two separate digital inputs, read an analog measurand, get some weather data, and control a servo motor. The motor can be controlled to both end positions and midpoint, and also in nine smaller steps, all with buttons. The current servo position is shown in a progress bar below the buttons.
+
+More than one client can connect to the module (server) at the same time, and perform readings and commands. If one client activates an LED or moves the servo motor, another client can turn the LED off and/or move the motor to another position. Indication of what one client does is broadcast to all clients.
 
 Hardware
 --------
