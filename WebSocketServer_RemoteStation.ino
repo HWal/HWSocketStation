@@ -1,6 +1,7 @@
 //**************************************************************************
 // Code for the LoLin NodeMCU V3 board with onboard ESP8266-12E WiFi module.
-// The views and controls are presented on a webpage.
+// The views and controls are presented on, and manipulated from, a webpage.
+// What the board/microcontroller can do:
 // + Control two digital outputs
 // + Read corresponding back-indications on two digital inputs
 // + Read one analog measurand
@@ -61,6 +62,7 @@
 #define MOTOR_NEUTRAL 1500
 #define MOTOR_HIGH 2100
 
+// Create objects
 MDNSResponder mdns;
 ESP8266WiFiMulti WiFiMulti;
 ESP8266WebServer server(80);
@@ -68,8 +70,9 @@ WebSocketsServer webSocket = WebSocketsServer(81);
 Adafruit_BME280 bme;
 Servo myServo;
 
+// WiFi details
 static const char ssid[] = "Your_ssid";
-static const char password[] = "Your_WiFi_password";
+static const char password[] = "Your_password";
 
 // Define GPIOs
 const int OUTPIN0 = 12; // D6   On LoLin NodeMCU V3
@@ -77,12 +80,6 @@ const int OUTPIN1 = 14; // D5          - " -
 const int INPIN0 = 13;  // D7          - " -
 const int INPIN1 = 15;  // D8          - " -
 const int MOTORPIN = 2; // D4          - " -
-bool indOk0 = false;    // LED0 Indication error popup only once
-bool indOk1 = false;    // LED1        - " -
-
-// Variables to keep output channel status: false = OFF, true = ON
-bool ch0Status;
-bool ch1Status;
 
 // C char arrays serving as command words sent through the Web Socket
 const char CH0ON[] = "ch0On";
@@ -90,6 +87,11 @@ const char CH0OFF[] = "ch0Off";
 const char CH1ON[] = "ch1On";
 const char CH1OFF[] = "ch1Off";
 
+// Other variables
+bool ch0Status;            // Output ch status: false = OFF, true = ON
+bool ch1Status;            //               - " -
+bool indOk0 = false;       // Show Indication error popup only once
+bool indOk1 = false;       //               - " -
 int adcVal = 0;            // ADC value from analog input on pin A0
 float voltage = 0;         // Calculated voltage based on max value 3.3V
 long currMillis = 0;       // Milliseconds since ESP8266 started
@@ -100,8 +102,11 @@ float temperature = 0;
 float pressure = 0;
 // float altitude = 0;     // Not used in this program
 float humidity = 0;
-int motorVal;
+int motorVal;              // PWM valaue in microseconds
 
+
+
+// THE WEBSITE STUFF
 // The following lines declare a string that goes into flash memory.
 // Defined by: "rawliteral(... any text / characters... )rawliteral"
 static const char PROGMEM INDEX_HTML[] = R"rawliteral(
@@ -152,30 +157,24 @@ function start() {
     var e = document.getElementById('ch0Status');
     if (g === 'ch0On') {
       e.style.color = 'Red';
-    }
-    else if (g === 'ch0Off') {
+    } else if (g === 'ch0Off') {
       e.style.color = 'black';
-    }
-    else if (g === '04#') {
+    } else if (g === '04#') {
       e.style.color = 'LightGray';
       window.alert('CH0 indikering feil');
-    }
-    else {
+    } else {
       console.log('unknown event');
     }
     // Ch1 Green LED
     var f = document.getElementById('ch1Status');
     if (g === 'ch1On') {
       f.style.color = 'LimeGreen';
-    }
-    else if (g === 'ch1Off') {
+    } else if (g === 'ch1Off') {
       f.style.color = 'black';
-    }
-    else if (g === '05#') {
+    } else if (g === '05#') {
       f.style.color = 'LightGray';
       window.alert('CH1 indikering feil');
-    }
-    else {
+    } else {
       console.log('unknown event');
     }
     // Progressbar for servo position
@@ -268,29 +267,29 @@ function servoMax() {
 </html>
 )rawliteral";
 // End of what goes into flash memory
+// END OF THE WEBSITE STUFF
 
 
 
-void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length)
-{
+void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
   Serial.println();
   Serial.printf("webSocketEvent(%d, %d, ...)\r\n", num, type);
   
   switch(type) {
-    case WStype_DISCONNECTED:
+    case WStype_DISCONNECTED: {
       Serial.printf("[%u] Disconnected!\r\n", num);
       break;
-    case WStype_CONNECTED:
-      {
-        IPAddress ip = webSocket.remoteIP(num);
-        Serial.printf("[%u] Connected from %d.%d.%d.%d url: %s\r\n", num, ip[0], ip[1], ip[2], ip[3], payload);
-      }
+    }
+    case WStype_CONNECTED: {
+      IPAddress ip = webSocket.remoteIP(num);
+      Serial.printf("[%u] Connected from %d.%d.%d.%d url: %s\r\n", num, ip[0], ip[1], ip[2], ip[3], payload);
       break;
-    case WStype_TEXT:
+    }
+    case WStype_TEXT: {
       Serial.printf("[%u] get Text: %s\r\n", num, payload);
 
-      // Set pin GPIO12 (D6) high
       if (strcmp(CH0ON, (const char *)payload) == 0) {
+        // Set pin GPIO12 (D6) high
         ch0Status = true;
         digitalWrite(OUTPIN0, 1);
         delay(20); //Simulate time to operate a relay
@@ -300,9 +299,8 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
           webSocket.broadcastTXT(payload, length);
           Serial.println("Command successfully executed, back-indication ok.");
         }
-      }
-      // Set pin GPIO12 (D6) low
-      else if (strcmp(CH0OFF, (const char *)payload) == 0) {
+      } else if (strcmp(CH0OFF, (const char *)payload) == 0) {
+        // Set pin GPIO12 (D6) low
         ch0Status = false;
         digitalWrite(OUTPIN0, 0);
         delay(20); //Simulate time to operate a relay
@@ -312,9 +310,8 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
           webSocket.broadcastTXT(payload, length);
           Serial.println("Command successfully executed, back-indication ok.");
         }
-      }
-      // Set pin GPIO14 (D5) high
-      else if (strcmp(CH1ON, (const char *)payload) == 0) {
+      } else if (strcmp(CH1ON, (const char *)payload) == 0) {
+        // Set pin GPIO14 (D5) high
         ch1Status = true;
         digitalWrite(OUTPIN1, 1);
         delay(20); //Simulate time to operate a relay
@@ -324,9 +321,8 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
           webSocket.broadcastTXT(payload, length);
           Serial.println("Command successfully executed, back-indication ok.");
         }
-      }
-      // Set pin GPIO14 (D5) low
-      else if (strcmp(CH1OFF, (const char *)payload) == 0) {
+      } else if (strcmp(CH1OFF, (const char *)payload) == 0) {
+        // Set pin GPIO14 (D5) low
         ch1Status = false;
         digitalWrite(OUTPIN1, 0);
         delay(20); //Simulate time to operate a relay
@@ -336,65 +332,60 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
           webSocket.broadcastTXT(payload, length);
           Serial.println("Command successfully executed, back-indication ok.");
         }
-      }
-      // Servo command L
-      else if ((payload[0] == '0') && (payload[1] == '8') && (payload[2] == '#')) {
+      } else if ((payload[0] == '0') && (payload[1] == '8') && (payload[2] == '#')) {
+        // Servo command L
         myServo.writeMicroseconds(MOTOR_LOW); // 900us
         motorVal = MOTOR_LOW;
-      }
-      // Servo command <
-      else if ((payload[0] == '0') && (payload[1] == '9') && (payload[2] == '#')) {
+      } else if ((payload[0] == '0') && (payload[1] == '9') && (payload[2] == '#')) {
+        // Servo command <
         if (motorVal >= (MOTOR_LOW + 150)) {
           motorVal -= 150;
           myServo.writeMicroseconds(motorVal); // Decrease by 150us
         }
-      }
-      // Servo command N
-      else if ((payload[0] == '1') && (payload[1] == '0') && (payload[2] == '#')) {
+      } else if ((payload[0] == '1') && (payload[1] == '0') && (payload[2] == '#')) {
+        // Servo command N
         myServo.writeMicroseconds(MOTOR_NEUTRAL); // 1500us
         motorVal = MOTOR_NEUTRAL;
-      }
-      // Servo command >
-      else if ((payload[0] == '1') && (payload[1] == '1') && (payload[2] == '#')) {
+      } else if ((payload[0] == '1') && (payload[1] == '1') && (payload[2] == '#')) {
+        // Servo command >
         if (motorVal <= (MOTOR_HIGH - 150)) {
            motorVal += 150;
            myServo.writeMicroseconds(motorVal); // Increase by 150us
         }
-      }
-      // Servo command R
-      else if ((payload[0] == '1') && (payload[1] == '2') && (payload[2] == '#')) {
+      } else if ((payload[0] == '1') && (payload[1] == '2') && (payload[2] == '#')) {
+        // Servo command R
         myServo.writeMicroseconds(MOTOR_HIGH); // 2100us
         motorVal = MOTOR_HIGH;
-      }
-      // If user input does not fit any of the above tests
-      else {
+      } else {
+        // If user input does not fit any of the above tests
         Serial.println();
         Serial.println("User input rejected, unknown error.");
       }
       break;
-    case WStype_BIN:
+    }
+    case WStype_BIN: {
       Serial.printf("[%u] get binary length: %u\r\n", num, length);
       hexdump(payload, length);
       // echo data back to browser
       webSocket.sendBIN(num, payload, length);
       break;
-    default:
+    }
+    default: {
       Serial.printf("Invalid WStype [%d]\r\n", type);
       break;
+    }
   }
 }
 
 
 
-void handleRoot()
-{
+void handleRoot() {
   server.send_P(200, "text/html", INDEX_HTML);
 }
 
 
 
-void handleNotFound()
-{
+void handleNotFound() {
   String message = "File Not Found\n\n";
   message += "URI: ";
   message += server.uri();
@@ -411,8 +402,7 @@ void handleNotFound()
 
 
 
-void setup()
-{
+void setup() {
   // Define and initialize command pins
   pinMode(OUTPIN0, OUTPUT);
   digitalWrite(OUTPIN0, 0);
@@ -470,8 +460,7 @@ void setup()
     Serial.println("MDNS responder started");
     mdns.addService("http", "tcp", 80);
     mdns.addService("ws", "tcp", 81);
-  }
-  else {
+  } else {
     Serial.println("MDNS.begin failed");
   }
   Serial.print("Connect to http://espWebSock.local or http://");
@@ -488,8 +477,7 @@ void setup()
 
 
 
-void loop()
-{
+void loop() {
   webSocket.loop();
   server.handleClient();
 
@@ -497,37 +485,37 @@ void loop()
   currMillis = millis(); // Total milliseconds since last boot
   if ((currMillis - oldMillis) > millisInterval) {
     oldMillis = currMillis;
-    // Read voltage and broadcast to clients
     if (counter == 0) {
+      // Read voltage and broadcast to clients
       adcVal = analogRead(A0); // 10 bits - returns int in [0, 1023]
       voltage = 3.3 * adcVal / 1023;
       String str00 = "00#";
       String str01 = String(voltage);
       String str02 = str00 + str01;
       webSocket.broadcastTXT(str02);
-    // Read temperature and broadcast to clients
     } else if (counter == 1) {
+      // Read temperature and broadcast to clients
       temperature = bme.readTemperature();
       String str10 = "01#";
       String str11 = String(temperature);
       String str12 = str10 + str11;
       webSocket.broadcastTXT(str12);
-    // Read pressure and broadcast to clients
     } else if (counter == 2) {
+      // Read pressure and broadcast to clients
       pressure = bme.readPressure() / 100.0F;
       String str20 = "02#";
       String str21 = String(pressure);
       String str22 = str20 + str21;
       webSocket.broadcastTXT(str22);
-    // Read humidity and broadcast to clients
     } else if (counter == 3) {
+      // Read humidity and broadcast to clients
       humidity = bme.readHumidity();
       String str30 = "03#";
       String str31 = String(humidity);
       String str32 = str30 + str31;
       webSocket.broadcastTXT(str32);
-    // Check ch0 indication
     } else if (counter == 4) {
+      // Check ch0 indication
       if (digitalRead(INPIN0) == ch0Status) {
         indOk0 = true;
         if (ch0Status == true) {
@@ -541,8 +529,8 @@ void loop()
         webSocket.broadcastTXT(str42);
         indOk0 = false;
       }
-    // Check ch1 indication
     } else if (counter == 5) {
+      // Check ch1 indication
       if (digitalRead(INPIN1) == ch1Status) {
         indOk1 = true;
         if (ch1Status == true) {
@@ -556,8 +544,8 @@ void loop()
         webSocket.broadcastTXT(str52);
         indOk1 = false;
       }
-    // Check position of motor (motorVal) and broadcast
     } else if (counter == 6) {
+      // Check position of motor (motorVal) and broadcast
       String str60 = "06#";
       int progBarPos = motorVal - 900;
       String str61 = String(progBarPos);

@@ -7,6 +7,8 @@ This code is developed for a test stand (see schematic) to explore some of the f
 
 Communication is based on the Websocket protocol (ws). To connect from the outside world, you need to forward ports 80 and 81 in your router.
 
+More than one client can connect to the module (server) at the same time, and perform readings and commands. If one client activates an LED or moves the servo motor, another client can turn the LED off and/or move the motor to another position. Indication of what one client does is broadcast to all clients.
+
 With this setup you can send two commands on separate digital outputs, get back-indications on two separate digital inputs, read an analog measurand, get some weather data, and control a servo motor. The motor can be controlled to both end positions and midpoint, and also in nine smaller steps, all with buttons. The current servo position is shown in a progress bar below the buttons.
 
 Hardware
@@ -58,7 +60,7 @@ Note: The file Adafruit_BME280.h contains the BME280 sensor I2C address on line 
 
 Connect to the webpage
 ----------------------
-You need to update the Arduino code with the ssid and WiFi password for your local network. You will find these variables on lines 71 and 72. Compile and upload the sketch. As soon as the upload reaches 100%, open the serial monitor and check that the board connects to your local WiFi network.
+You need to update the Arduino code with the ssid and WiFi password for your local network. You will find these variables on lines 74 and 75. Compile and upload the sketch. As soon as the upload reaches 100%, open the serial monitor and check that the board connects to your local WiFi network.
 
 The ip address of the board is reported on the serial monitor. Type this address into the address field of your browser on a PC or mobile phone. From the outside world you need to type your public ip address. This requires that you have performed the port forwarding mentioned above.
 
