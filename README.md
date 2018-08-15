@@ -3,7 +3,7 @@
 NodeMCU V3 Remote Control Station
 =================================
 
-This code is developed for a test stand (see schematic) to explore some of the features of the ESP8266-12E WiFi module. Hopefully you will be able to download it and do necessary modifications according to your own needs.
+This project is developed for a test stand (see schematic) to explore some of the features of the ESP8266-12E WiFi module. Hopefully you will be able to download it and do necessary modifications according to your own needs.
 
 Communication is based on the Websocket protocol (ws). To connect from the outside world, you need to forward ports 80 and 81 in your router.
 
