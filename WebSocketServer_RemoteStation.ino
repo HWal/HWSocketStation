@@ -71,7 +71,7 @@ Adafruit_BME280 bme;
 Servo myServo;
 
 // WiFi details
-static const char ssid[] = "Din_ssid";
+static const char ssid[] = "Your_ssid";
 static const char password[] = "Your_password";
 
 // Define GPIOs
