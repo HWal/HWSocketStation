@@ -432,7 +432,7 @@ void setup() {
 
   // Confirm valid BME280 available
   bool status;
-  status = bme.begin();  
+  status = bme.begin(BME280_ADDRESS_ALTERNATE);
   if (!status) {
     Serial.println("Could not find a valid BME280 sensor, check address and/or wiring!");
     while (1);
