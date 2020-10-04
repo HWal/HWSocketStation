@@ -54,7 +54,7 @@ Download arduinoWebSockets library from https://github.com/Links2004/arduinoWebS
 
 Download Adafruit common sensor library from https://github.com/adafruit/Adafruit_Sensor . Choose "Download ZIP", extract the .zip file and move it to the Arduino library folder.
 
-Download Adafruit BME280 sensor library from https://github.com/adafruit/Adafruit_BME280_Library . Choose "Download ZIP", extract the .zip file and move it to the Arduino library folder. 
+Download Adafruit BME280 sensor library from https://github.com/adafruit/Adafruit_BME280_Library . Choose "Download ZIP", extract the .zip file and move it to the Arduino library folder. This must be version 2.0.0 or above.
 
 Note: The file Adafruit_BME280.h contains the BME280 sensor I2C address on line 32. To be able to read data from it, you may have to change the address from 0x77 to 0x76.
 
